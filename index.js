@@ -3,7 +3,7 @@ import distribuidorasRoutes from './routes/distribuidoras.routes.js';
 import { carregarDistribuidorasResidenciais } from './services/cacheService.js';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use('/distribuidoras', distribuidorasRoutes);
