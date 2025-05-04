@@ -5,23 +5,17 @@ import { carregarDistribuidorasResidenciais } from './services/cacheService.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-let cacheCarregado = false;
-
-app.use(async (req, res, next) => {
-  if (!cacheCarregado) {
-    try {
-      await carregarDistribuidorasResidenciais();
-      cacheCarregado = true;
-      console.log('Cache da ANEEL carregado com sucesso');
-    } catch (err) {
-      console.error('Erro ao carregar cache:', err.message);
-    }
-  }
-  next();
-});
-
 app.use(express.json());
 app.use('/distribuidoras', distribuidorasRoutes);
+
+app.get('/carregar-cache', async (req, res) => {
+  try {
+    await carregarDistribuidorasResidenciais();
+    res.json({ sucesso: true, mensagem: 'Cache carregado com sucesso' });
+  } catch (err) {
+    res.status(500).json({ sucesso: false, erro: err.message });
+  }
+});
 
 app.get('/', (req, res) => {
   res.send('API de Tarifas Elétricas do Brasil');
