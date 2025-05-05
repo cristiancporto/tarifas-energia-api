@@ -1,103 +1,68 @@
-# ⚡ API Brasileira de Tarifas de Energia Elétrica
+[![Deploy Render](https://img.shields.io/badge/online-tarifas__energia__api-4caf50?style=flat-square)](https://tarifas-energia-api.onrender.com)
 
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-blue)
+# ⚡️ API de Tarifas de Energia Elétrica - Brasil (Versão Pública)
 
-API pública, simples e funcional, desenvolvida para permitir que cidadãos e empresas possam consultar dados reais sobre tarifas de energia elétrica no Brasil, de forma confiável e direta.
+API pública voltada para consumidores comuns e integração com sensores de medição (ESP32, SCT-013, Shelly, Sonoff etc.) para estimar o consumo em R$ com base em tarifas, bandeiras e impostos regionais.
 
-## 🚀 Visão Geral
-Esta API consulta dados da ANEEL (Agência Nacional de Energia Elétrica), realiza projeções de consumo, aplica bandeiras tarifárias vigentes e permite buscas inteligentes por distribuidoras.
+---
 
-## 🔗 Base de dados
-- **Fonte**: CSV oficial da ANEEL
-- **Atualização**: leitura direta do link oficial da ANEEL
-- **Bandeiras tarifárias**: atualizadas mensalmente via tabela interna
+## 🔗 Endpoints disponíveis (uso comum)
 
-## 🧪 Endpoints disponíveis
+### ✅ Status da API
+GET /distribuidoras/status
 
-### `GET /distribuidoras/status`
-Retorna status da API.
-```json
-{
-  "sucesso": true,
-  "dados": {
-    "status": "ok",
-    "versao": "1.0.0"
-  }
-}
-```
+### ✅ Bandeira tarifária vigente
+GET /distribuidoras/bandeira/atual
 
-### `GET /distribuidoras/cache`
-Lista distribuidoras residenciais (filtradas da ANEEL).
+### ✅ Lista de distribuidoras (cache ANEEL)
+GET /distribuidoras/cache
 
-### `GET /distribuidoras/slugs`
-Lista todos os slugs válidos para consulta.
+### ✅ Lista de slugs válidos
+GET /distribuidoras/slugs
 
-### `GET /distribuidoras/buscar?nome=CEB`
-Busca por nome aproximado.
+### ✅ Lista selecionável (nome + slug)
+GET /distribuidoras/selecionaveis
 
-### `GET /distribuidoras/bandeira/atual`
-Retorna a bandeira tarifária vigente no mês atual.
+### ✅ Buscar por nome (ex: ?nome=neoenergia)
+GET /distribuidoras/buscar?nome=XXX
 
-### `GET /distribuidoras/estado/:uf`
-Filtra distribuidoras por estado (UF).
+### ✅ Buscar por estado (UF)
+GET /distribuidoras/estado/DF
 
-### `GET /distribuidoras/selecionaveis`
-Retorna nomes e slugs ideais para seleção em interfaces.
+### ✅ Projeção de custo em R$
+POST /distribuidoras/projecao
 
-### `GET /distribuidoras/dinamico`
-Consulta dados em tempo real via CSV da ANEEL (uso avançado).
-
-### `GET /distribuidoras/atualizar/csv-url`
-Retorna o link direto do CSV da ANEEL.
-
-### `POST /distribuidoras/projecao`
-Projeção de custo com base no consumo informado.
-
-**Body:**
-```json
+Body JSON:
 {
   "consumo_kwh": 100,
   "distribuidora_slug": "neoenergia-braslia"
 }
-```
 
-**Resposta:**
-```json
-{
-  "sucesso": true,
-  "dados": {
-    "distribuidora": "NEOENERGIA BRASILIA",
-    "consumo_kwh": 100,
-    "tarifa_kwh": 0.784,
-    "bandeira": "amarela",
-    "adicional_bandeira": 0.01874,
-    "valor_estimado": 80.27
-  }
-}
-```
+### ✅ Carregar cache manualmente
+GET /carregar-cache
 
 ---
 
-## ⚙️ Como rodar localmente
+## ⚙️ Requisitos para rodar localmente
 
-```bash
+git clone https://github.com/mpfarias/tarifas-energia-api.git
+cd tarifas-energia-api
 npm install
-npm start
-```
-
-A API rodará por padrão em:
-```
-http://localhost:3000
-```
-
-## 🛡️ Licença
-
-Este projeto está licenciado sob a licença MIT. Sinta-se livre para usar, contribuir e compartilhar.
-
-## 🤝 Contribuição
-
-Pull requests são bem-vindos! Sugestões de melhoria, correções e novos recursos que mantenham a simplicidade do projeto são bem-vindos.
+node index.js
 
 ---
 
-© 2025 - API Brasileira de Tarifas de Energia Elétrica
+## 📌 Observações
+
+- Essa versão não acessa o CSV da ANEEL em tempo real por questões de estabilidade
+- Para empresas ou usos técnicos, uma versão empresarial será lançada em breve com recursos extras
+
+---
+
+## 📄 Licença
+
+MIT — Livre para uso e modificação com créditos.
+
+---
+
+Feito com 💡 por @mpfarias

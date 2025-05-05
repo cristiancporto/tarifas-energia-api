@@ -20,7 +20,7 @@ router.get('/status', (req, res) => {
 
 router.get('/buscar', buscarDistribuidorasPorNome);
 router.get('/cache', listarDistribuidorasCache);
-router.get('/dinamico', listarDistribuidorasDinamico);
+//router.get('/dinamico', listarDistribuidorasDinamico);
 router.get('/atualizar/csv-url', obterCSVdaANEEL);
 router.get('/bandeira/atual', obterBandeiraAtual);
 router.get('/slugs', listarSlugsDistribuidoras);
