@@ -10,12 +10,9 @@ app.use('/distribuidoras', distribuidorasRoutes);
 
 app.get('/carregar-cache', async (req, res) => {
   try {
-    console.log('Iniciando carregamento do cache da ANEEL...');
-    await carregarDistribuidorasResidenciais();
-    console.log('Cache carregado com sucesso.');
+    await loadCache();
     res.json({ sucesso: true, mensagem: 'Cache carregado com sucesso' });
   } catch (err) {
-    console.error('Erro ao carregar cache:', err.message);
     res.status(500).json({ sucesso: false, erro: err.message });
   }
 });
@@ -27,3 +24,16 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+await loadCache();
+
+async function loadCache(req, res){
+  try {
+    console.log('Iniciando carregamento do cache da ANEEL...');
+    await carregarDistribuidorasResidenciais();
+    console.log('Cache carregado com sucesso.');
+  } catch(err){
+    console.error('Erro ao carregar cache:', err.message);
+    throw err;
+  }
+}
