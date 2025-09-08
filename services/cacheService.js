@@ -10,18 +10,43 @@ export const carregarDistribuidorasResidenciais = async () => {
     // Filtra apenas distribuidoras da classe residencial com valores válidos
     const residenciais = todasDistribuidoras
       .filter(d => d.DscClasse === 'Residencial' && d.VlrTE && d.SigAgente)
-      .map(d => ({
-        distribuidora: d.SigAgente,
-        slug: d.SigAgente.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, ''),
-        estado: d.SigUF,
-        cnpj: d.NumCNPJDistribuidora,
-        tarifa_energia_kwh: parseFloat(d.VlrTE.replace(',', '.')) / 1000,
-        tarifa_uso_kwh: d.VlrTUSD ? parseFloat(d.VlrTUSD.replace(',', '.')) / 1000 : null,
-        modalidade: d.DscModalidadeTarifaria,
-        subgrupo: d.DscSubGrupo,
-        inicio_vigencia: d.DatInicioVigencia,
-        fim_vigencia: d.DatFimVigencia,
-      }));
+      .map(data => {
+        let formattedData = {
+          distribuidora: data.SigAgente,
+          slug: data.SigAgente.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, ''),
+          estado: data.SigUF,
+          cnpj: data.NumCNPJDistribuidora,
+          baseTarifaria: data.DscBaseTarifaria.normalize("NFD"),
+          tarifaEnergiaKwh: parseFloat(data.VlrTE.replace(',', '.')) / 1000,
+          tusdBruto: parseFloat(data.VlrTUSD.replace(',', '.')),
+          teBruto: parseFloat(data.VlrTE.replace(',', '.')),
+          tarifaUsoKwh: data.VlrTUSD ? parseFloat(data.VlrTUSD.replace(',', '.')) / 1000 : null,
+          subGgrupo: data.DscSubGrupo,
+          inicioVigencia: data.DatInicioVigencia,
+          fimVigencia: data.DatFimVigencia,
+          unidadeTerciaria: data.DscUnidadeTerciaria
+        };
+
+        if (data.DscModalidadeTarifaria && data.DscModalidadeTarifaria !== 'Não se aplica')
+          formattedData.modalidade = data.DscModalidadeTarifaria.normalize("NFD");
+
+        if (data.DscClasse && data.DscClasse !== 'Não se aplica')
+          formattedData.classe = data.DscClasse.normalize("NFD");
+
+        if (data.DscSubClasse && data.DscSubClasse !== 'Não se aplica')
+          formattedData.subClasse = data.DscSubClasse.normalize("NFD");
+
+        if (data.DscDetalhe && data.DscDetalhe !== 'Não se aplica')
+          formattedData.detalhe = data.DscDetalhe.normalize("NFD");
+
+        if (data.NomPostoTarifario && data.NomPostoTarifario !== 'Não se aplica')
+          formattedData.postoTarifario = data.NomPostoTarifario.normalize("NFD");
+
+        if (data.SigAgenteAcessante && data.SigAgenteAcessante !== 'Não se aplica')
+          formattedData.agenteAcessante = data.SigAgenteAcessante.normalize("NFD");
+
+        return formattedData;
+      });
 
     global.cachedDistribuidoras = residenciais;
     console.log(`✅ ${residenciais.length} distribuidoras residenciais carregadas com sucesso.`);
