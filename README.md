@@ -34,8 +34,8 @@ POST /distribuidoras/projecao
 
 Body JSON:
 {
-  "consumo_kwh": 100,
-  "distribuidora_slug": "neoenergia-braslia"
+  "consumoKwh": 100,
+  "distribuidoraSlug": "neoenergia-braslia"
 }
 
 ### ✅ Carregar cache manualmente
