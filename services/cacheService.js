@@ -1,4 +1,4 @@
-import { obterDistribuidorasCSV, lerDistribuidorasCSVDireto } from './aneelService.js';
+import { obterDistribuidorasCSV, lerDistribuidorasCSVDireto, obterBandeirasCSV, lerBandeirasCSVDireto } from './aneelService.js';
 
 function limparNaoSeAplica(campo) {
   if (campo === 'Não se aplica' || campo === 'N�o se aplica')
@@ -44,5 +44,22 @@ export const carregarDistribuidorasResidenciais = async () => {
   } catch (erro) {
     console.error('❌ Erro ao carregar distribuidoras da ANEEL:', erro.message);
     global.cachedDistribuidoras = []; // Garante que não quebra rotas
+  }
+};
+
+export const carregarBandeirasTarifarias = async () => {
+  try {
+    console.log('🔄 Carregando dados da ANEEL...');
+
+    const csvUrl = await obterBandeirasCSV();
+    const todasBandeiras = await lerBandeirasCSVDireto(csvUrl);
+    global.cachedBandeiras = todasBandeiras.map(d => ({
+      competencia: d.DatCompetencia,
+      bandeira: d.NomBandeiraAcionada,
+      adicional_kWh: parseFloat(d.VlrAdicionalBandeira.replace(',', '.')) / 1000,
+    }));
+  } catch (erro) {
+    console.error('❌ Erro ao carregar bandeiras da ANEEL:', erro.message);
+    global.cachedBandeiras = []; // Garante que não quebra rotas
   }
 };

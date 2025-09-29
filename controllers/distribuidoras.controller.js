@@ -158,7 +158,7 @@ export const buscarDistribuidorasPorFiltro = (req, res) => {
   });
 
   if (!resultados.length) {
-    return res.status(404).json({ sucesso: false, erro: 'Nenhuma distribuidora encontrada com esse nome.' });
+    return res.status(404).json({ sucesso: false, erro: 'Nenhuma distribuidora encontrada.' });
   }
 
   res.json({ sucesso: true, dados: resultados });
