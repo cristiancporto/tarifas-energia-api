@@ -8,7 +8,8 @@ import {
     listarDistribuidorasDinamico,
     obterBandeiraAtual,
     obterCSVdaANEEL,
-    buscarDistribuidorasPorNome
+    buscarDistribuidorasPorNome,
+    buscarDistribuidorasPorFiltro
 } from '../controllers/distribuidoras.controller.js';
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.get('/status', (req, res) => {
 });
 
 router.get('/buscar', buscarDistribuidorasPorNome);
+router.get('/filtro/', buscarDistribuidorasPorFiltro);
 router.get('/cache', listarDistribuidorasCache);
 //router.get('/dinamico', listarDistribuidorasDinamico);
 router.get('/atualizar/csv-url', obterCSVdaANEEL);

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import https from 'https';
 import csv from 'csv-parser';
+import iconv from 'iconv-lite';
 
 export const obterDistribuidorasCSV = async () => {
   try {
@@ -23,13 +24,14 @@ export const obterDistribuidorasCSV = async () => {
   }
 };
 
-
 export const lerDistribuidorasCSVDireto = (csvUrl) => {
   return new Promise((resolve, reject) => {
     const resultados = [];
 
     https.get(csvUrl, (res) => {
-      res.pipe(csv({ separator: ';' }))
+      res
+      .pipe(iconv.decodeStream('latin1'))
+      .pipe(csv({ separator: ';' }))
         .on('data', (data) => {
           resultados.push(data);
         })

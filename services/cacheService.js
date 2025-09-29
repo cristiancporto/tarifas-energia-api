@@ -1,39 +1,9 @@
 import { obterDistribuidorasCSV, lerDistribuidorasCSVDireto } from './aneelService.js';
 
-class CarregarDistribuidoraResponse {
-  constructor(data) {
-      this.distribuidora = data.SigAgente;
-      this.slug = data.SigAgente.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, '');
-      this.estado = data.SigUF;
-      this.cnpj = data.NumCNPJDistribuidora;
-      this.baseTarifaria = data.DscBaseTarifaria.normalize("NFD");
-      this.tarifaEnergiaKwh = parseFloat(data.VlrTE.replace(',', '.')) / 1000;
-      this.tusdBruto = parseFloat(data.VlrTUSD.replace(',', '.'));
-      this.teBruto = parseFloat(data.VlrTE.replace(',', '.'));
-      this.tarifaUsoKwh = data.VlrTUSD ? parseFloat(data.VlrTUSD.replace(',', '.')) / 1000 : null;
-      this.subGgrupo = data.DscSubGrupo;
-      this.inicioVigencia = data.DatInicioVigencia;
-      this.fimVigencia = data.DatFimVigencia;
-      this.unidadeTerciaria = data.DscUnidadeTerciaria;
-
-    if (data.DscModalidadeTarifaria && data.DscModalidadeTarifaria !== 'Não se aplica')
-      this.modalidade = data.DscModalidadeTarifaria.normalize("NFD");
-
-    if (data.DscClasse && data.DscClasse !== 'Não se aplica')
-      this.classe = data.DscClasse.normalize("NFD");
-
-    if (data.DscSubClasse && data.DscSubClasse !== 'Não se aplica')
-      this.subClasse = data.DscSubClasse.normalize("NFD");
-
-    if (data.DscDetalhe && data.DscDetalhe !== 'Não se aplica')
-      this.detalhe = data.DscDetalhe.normalize("NFD");
-
-    if (data.NomPostoTarifario && data.NomPostoTarifario !== 'Não se aplica')
-      this.postoTarifario = data.NomPostoTarifario.normalize("NFD");
-
-    if (data.SigAgenteAcessante && data.SigAgenteAcessante !== 'Não se aplica')
-      this.agenteAcessante = data.SigAgenteAcessante.normalize("NFD");
-  }
+function limparNaoSeAplica(campo) {
+  if (campo === 'Não se aplica' || campo === 'N�o se aplica')
+    return null;
+  return campo;
 }
 
 export const carregarDistribuidorasResidenciais = async () => {
@@ -46,7 +16,27 @@ export const carregarDistribuidorasResidenciais = async () => {
     // Filtra apenas distribuidoras da classe residencial com valores válidos
     const residenciais = todasDistribuidoras
       .filter(d => d.DscClasse === 'Residencial' && d.VlrTE && d.SigAgente)
-      .map(data => new CarregarDistribuidoraResponse(data));
+      .map(d => ({
+        distribuidora: d.SigAgente,
+        slug: d.SigAgente.toLowerCase().replace(/\s+/g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, ''),
+        estado: d.SigUF,
+        cnpj: d.NumCNPJDistribuidora,
+        base_tarifaria: d.DscBaseTarifaria.normalize("NFD"),
+        tarifa_energia_kwh: parseFloat(d.VlrTE.replace(',', '.')) / 1000,
+        tarifa_energia_bruto: parseFloat(d.VlrTE.replace(',', '.')),
+        tarifa_uso_kwh: d.VlrTUSD ? parseFloat(d.VlrTUSD.replace(',', '.')) / 1000 : null,
+        tarifa_uso_bruto: parseFloat(d.VlrTUSD.replace(',', '.')),
+        modalidade: limparNaoSeAplica(d.DscModalidadeTarifaria),
+        subgrupo: limparNaoSeAplica(d.DscSubGrupo),
+        inicio_vigencia: limparNaoSeAplica(d.DatInicioVigencia),
+        fim_vigencia: limparNaoSeAplica(d.DatFimVigencia),
+        unidade_terciaria: limparNaoSeAplica(d.DscUnidadeTerciaria),
+        classe: limparNaoSeAplica(d.DscClasse),
+        subclasse: limparNaoSeAplica(d.DscSubClasse),
+        detalhe: limparNaoSeAplica(d.DscDetalhe),
+        posto_tarifario: limparNaoSeAplica(d.NomPostoTarifario),
+        distribuidora_acessante: limparNaoSeAplica(d.SigAgenteAcessante)
+      }));
 
     global.cachedDistribuidoras = residenciais;
     console.log(`✅ ${residenciais.length} distribuidoras residenciais carregadas com sucesso.`);

@@ -51,34 +51,16 @@ export const projetarConsumo = (req, res) => {
 
   res.json({
     sucesso: true,
-    dados: new ProjetarConsumoResponse(
-      dist.distribuidora,
+    dados: {
+      distribuidora: dist.distribuidora,
       consumo_kwh,
-      tarifaBase,
-      bandeira.tipo,
-      adicional,
-      parseFloat(valor_estimado.toFixed(2)))
+      tarifa_kwh: tarifaBase,
+      bandeira: bandeira.tipo,
+      adicional_bandeira: adicional,
+      valor_estimado: parseFloat(valor_estimado.toFixed(2))
+    }
   });
 };
-
-class ProjetarConsumoResponse {
-
-  distribuidora;
-  consumoKW;
-  tarifaKWh;
-  tipoBandeira;
-  adicionalBandeira;
-  valorEstimado;
-
-  constructor(distribuidora, consumoKW, tarifaKWh, tipoBandeira, adicionalBandeira, valorEstimado) {
-    this.distribuidora = distribuidora;
-    this.consumoKW = consumoKW;
-    this.tarifaKWh = tarifaKWh;
-    this.tipoBandeira = tipoBandeira;
-    this.adicionalBandeira = adicionalBandeira;
-    this.valorEstimado = pvalorEstimado;
-  }
-}
 
 export const obterCSVdaANEEL = async (req, res) => {
   try {
@@ -94,7 +76,17 @@ export const listarDistribuidorasDinamico = async (req, res) => {
     const csvUrl = await obterDistribuidorasCSV();
     const dados = await lerDistribuidorasCSVDireto(csvUrl);
 
-    const resultado = dados.map((linha) => new GetDistribuidoraListResponse(linha));
+    const resultado = dados.map((linha) => ({
+      distribuidora: linha.SigAgente,
+      cnpj: linha.NumCNPJDistribuidora,
+      classe: linha.DscClasse,
+      modalidade: linha.DscModalidadeTarifaria,
+      subgrupo: linha.DscSubGrupo,
+      tarifa_energia_kwh: linha.VlrTE ? parseFloat(linha.VlrTE.replace(',', '.')) / 1000 : null,
+      tarifa_uso_kwh: linha.VlrTUSD ? parseFloat(linha.VlrTUSD.replace(',', '.')) / 1000 : null,
+      inicio_vigencia: linha.DatInicioVigencia,
+      fim_vigencia: linha.DatFimVigencia
+    }));
 
     res.json({ sucesso: true, dados: resultado });
   } catch (error) {
@@ -108,7 +100,7 @@ export const listarDistribuidorasCache = (req, res) => {
 };
 
 export const listarSlugsDistribuidoras = (req, res) => {
-  const slugs = global.cachedDistribuidoras.map(d => d.slug);
+  const slugs = [...new Set(global.cachedDistribuidoras.map(d => d.slug))];
   res.json({ sucesso: true, dados: slugs.sort() });
 };
 
@@ -130,40 +122,51 @@ export const buscarDistribuidorasPorNome = (req, res) => {
   res.json({ sucesso: true, dados: resultados });
 };
 
+export const buscarDistribuidorasPorFiltro = (req, res) => {
+  const somenteVigentes = req.query.somenteVigentes?.toLowerCase().trim() === "true" ? true : false;
+  const nome = req.query.nome?.toLowerCase().trim();
+  const modalidade = req.query.modalidade?.toLowerCase().trim();
+  const subgrupo = req.query.subgrupo?.toLowerCase().trim();
+  const subclasse = req.query.subclasse?.toLowerCase().trim();
+  const detalhe = req.query.detalhe?.toLowerCase().trim();
+
+  const resultados = global.cachedDistribuidoras.filter(d => {
+    let isMatch = true;
+
+    if (somenteVigentes) {
+      let now = new Date();
+
+      isMatch &&= now > new Date(d.inicio_vigencia) && now < new Date(d.fim_vigencia);
+    }
+
+    if (nome)
+      isMatch &&= d.distribuidora.toLowerCase() == nome;
+
+    if (modalidade)
+      isMatch &&= d.modalidade.toLowerCase() == modalidade;
+
+    if (subgrupo)
+      isMatch &&= d.subgrupo.toLowerCase() == subgrupo;
+
+    if (subclasse)
+      isMatch &&= d.subclasse?.toLowerCase() == subclasse;
+
+    if (detalhe)
+      isMatch &&= d.detalhe?.toLowerCase() == detalhe;
+
+    return isMatch;
+  });
+
+  if (!resultados.length) {
+    return res.status(404).json({ sucesso: false, erro: 'Nenhuma distribuidora encontrada com esse nome.' });
+  }
+
+  res.json({ sucesso: true, dados: resultados });
+};
+
 export const obterBandeiraAtual = (req, res) => {
   const mesAtual = new Date().toISOString().slice(0, 7);
   const bandeira = bandeiras.find(b => b.mes === mesAtual) || { tipo: 'verde', valor_adicional_kwh: 0 };
 
   res.json({ sucesso: true, dados: bandeira });
 };
-
-class GetDistribuidoraListResponse {
-  distribuidora;
-  cnpj;
-  classe;
-  modalidade;
-  subgrupo;
-  tarifaEnergiaKWh;
-  tarifaUsoKWh;
-  inicioVigencia;
-  fimVigencia;
-
-  constructor(linha) {
-    this.distribuidora = linha.SigAgente;
-    this.cnpj = linha.NumCNPJDistribuidora;
-    this.classe = linha.DscClasse;
-    this.modalidade = linha.DscModalidadeTarifaria;
-    this.subgrupo = linha.DscSubGrupo;
-    this.tarifaEnergiaKWh = convertMWRawValueToKW(linha.VlrTE);
-    this.tarifaUsoKWh = convertMWRawValueToKW(linha.VlrTUSD);
-    this.inicioVigencia = linha.DatInicioVigencia;
-    this.fimVigencia = linha.DatFimVigencia;
-  }
-}
-
-function convertMWRawValueToKW(rawValue) {
-  if (!rawValue)
-    return null;
-
-  return parseFloat(rawValue.replace(',', '.')) / 1000;
-}
