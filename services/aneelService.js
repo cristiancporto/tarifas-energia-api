@@ -30,7 +30,7 @@ export const lerDistribuidorasCSVDireto = (csvUrl) => {
 
     https.get(csvUrl, (res) => {
       res
-        .pipe(iconv.decodeStream('latin1'))
+        .pipe(iconv.decodeStream('utf-8'))
         .pipe(csv({ separator: ';' }))
         .on('data', (data) => {
           resultados.push(data);
